@@ -23,7 +23,7 @@ QLAB is an educational resource to help teams understand PKI and Post-Quantum Cr
 - Encrypt with **ML-KEM** key encapsulation (the new pattern)
 - Practice **crypto-agile** CA migration
 
-QLAB uses **[Qpki](https://github.com/remiblancher/qpki)** for all PKI operations.
+QLAB uses **[Qpki](https://github.com/qpki/qpki)** for all PKI operations.
 
 ---
 
@@ -37,7 +37,7 @@ QLAB uses **[Qpki](https://github.com/remiblancher/qpki)** for all PKI operation
 ### macOS / Linux
 
 ```bash
-git clone https://github.com/remiblancher/qlab.git
+git clone https://github.com/qpki/qlab.git
 cd qlab
 ./tooling/install.sh
 ```
@@ -46,7 +46,7 @@ cd qlab
 
 ```powershell
 # 1. Install QPKI (PowerShell)
-git clone https://github.com/remiblancher/qlab.git
+git clone https://github.com/qpki/qlab.git
 cd qlab
 .\tooling\install.ps1
 
@@ -152,13 +152,13 @@ cd qlab
 - Catalyst certificates (ITU-T X.509 9.8)
 - Composite certificates *(supported, no lab demo)*
 
-See [Qpki](https://github.com/remiblancher/qpki#supported-algorithms) for the full list of supported algorithms.
+See [Qpki](https://github.com/qpki/qpki#supported-algorithms) for the full list of supported algorithms.
 
 ---
 
 ## Resources
 
-- [Qpki](https://github.com/remiblancher/qpki) — The PKI toolkit used by QLAB
+- [Qpki](https://github.com/qpki/qpki) — The PKI toolkit used by QLAB
 - [Glossary](docs/GLOSSARY.md) — PQC and PKI terminology
 - [Troubleshooting](docs/TROUBLESHOOTING.md) — Common issues and solutions
 - [NIST Post-Quantum Cryptography](https://csrc.nist.gov/projects/post-quantum-cryptography)
@@ -170,4 +170,4 @@ See [Qpki](https://github.com/remiblancher/qpki#supported-algorithms) for the fu
 
 ## License
 
-Apache License 2.0 — See [LICENSE](https://github.com/remiblancher/qlab/blob/main/LICENSE)
+Apache License 2.0 — See [LICENSE](https://github.com/qpki/qlab/blob/main/LICENSE)

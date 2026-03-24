@@ -62,7 +62,7 @@ fi
 # Download pre-built binary from GitHub releases
 # =============================================================================
 
-GITHUB_REPO="remiblancher/qpki"
+GITHUB_REPO="qpki/qpki"
 VERSION="${PKI_VERSION:-latest}"
 
 echo ""
