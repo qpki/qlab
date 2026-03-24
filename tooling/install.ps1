@@ -41,7 +41,7 @@ if (Test-Path $BinaryPath) {
 # Download pre-built binary from GitHub releases
 # =============================================================================
 
-$GithubRepo = "remiblancher/post-quantum-pki"
+$GithubRepo = "qpki/qpki"
 $Version = if ($env:PKI_VERSION) { $env:PKI_VERSION } else { "latest" }
 
 Write-Host ""

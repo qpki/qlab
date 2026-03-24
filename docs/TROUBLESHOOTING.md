@@ -38,7 +38,7 @@ Common issues and solutions when working with post-quantum PKI.
 **Solutions:**
 1. Use hybrid certificates (Lab-03) — legacy clients use ECDSA, modern clients verify both
 2. Update client libraries to versions supporting PQC
-3. Check [Qpki compatibility matrix](https://github.com/remiblancher/qpki#compatibility)
+3. Check [Qpki compatibility matrix](https://github.com/qpki/qpki#compatibility)
 
 ---
 
@@ -168,6 +168,6 @@ The size increase is the trade-off for quantum resistance.
 
 ## Getting Help
 
-- [Qpki Documentation](https://github.com/remiblancher/qpki)
-- [Qlab Issues](https://github.com/remiblancher/qlab/issues)
+- [Qpki Documentation](https://github.com/qpki/qpki)
+- [Qlab Issues](https://github.com/qpki/qlab/issues)
 - [NIST PQC FAQ](https://csrc.nist.gov/projects/post-quantum-cryptography/faqs)
