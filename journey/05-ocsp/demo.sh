@@ -247,13 +247,14 @@ pause
 
 print_step "Step 4c: Verify OCSP Response (REVOKED)"
 
-echo "  Verify the response — should fail because certificate is revoked..."
+echo "  Verify the response signature and check certificate status..."
 echo ""
 
-if ! $PKI_BIN ocsp verify $DEMO_TMP/response2.ocsp --ca $DEMO_TMP/pqc-ca/ca.crt --cert $DEMO_TMP/server.crt 2>&1; then
-    echo ""
-    echo -e "  ${RED}✗${NC} Certificate status: ${RED}REVOKED${NC} (expected!)"
-fi
+run_cmd "$PKI_BIN ocsp verify $DEMO_TMP/response2.ocsp --ca $DEMO_TMP/pqc-ca/ca.crt --cert $DEMO_TMP/server.crt"
+
+echo ""
+echo -e "  ${GREEN}✓${NC} Response signature is valid — the responder is authentic"
+echo -e "  ${RED}✗${NC} Certificate status: ${RED}REVOKED${NC} — as expected after key compromise"
 echo ""
 echo "  ┌─────────────────────────────────────────────────────────────────┐"
 echo "  │  OCSP STATUS COMPARISON                                        │"

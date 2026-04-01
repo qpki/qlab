@@ -167,11 +167,11 @@ qpki ocsp info output/response2.ocsp
 ### Step 4c: Verify OCSP Response (REVOKED)
 
 ```bash
-# Verify — should fail because certificate is revoked
+# Verify signature and check status — signature is valid, status is revoked
 qpki ocsp verify output/response2.ocsp \
     --ca output/pqc-ca/ca.crt \
     --cert output/server.crt
-# Error: certificate status is revoked
+# Response signature: OK — Certificate Status: revoked
 ```
 
 ### Step 5: Stop OCSP Responder
