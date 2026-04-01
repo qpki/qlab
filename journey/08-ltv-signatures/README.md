@@ -139,7 +139,7 @@ Embed EVERYTHING needed in a self-sufficient bundle:
 3c. Request a timestamp (via HTTP)
 4. Create an LTV bundle
 5. Verify offline (simulating 2055)
-2b. Stop TSA server
+6. Stop TSA server
 
 ---
 
@@ -263,7 +263,7 @@ qpki cms verify output/ltv-bundle/signature.p7s \
 # Result: VALID - signature verified with bundled chain
 ```
 
-### Step 2b: Stop TSA Server
+### Step 6: Stop TSA Server
 
 ```bash
 # Stop the TSA server

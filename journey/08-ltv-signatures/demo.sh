@@ -52,7 +52,7 @@ echo "  3b. Sign document"
 echo "  3c. Request a timestamp (via HTTP)"
 echo "  4.  Create an LTV bundle"
 echo "  5.  Verify offline (simulating 2055)"
-echo "  2b. Stop TSA server"
+echo "  6.  Stop TSA server"
 echo ""
 
 echo -e "${DIM}LTV = Long-Term Validation. Bundle everything for offline verification.${NC}"
@@ -335,7 +335,7 @@ pause
 # Step 9: Stop TSA Server
 # =============================================================================
 
-print_step "Step 2b: Stop TSA Server"
+print_step "Step 6: Stop TSA Server"
 
 echo "  Stopping the TSA server..."
 echo ""
