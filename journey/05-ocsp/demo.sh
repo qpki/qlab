@@ -176,15 +176,13 @@ echo "  Inspect the response..."
 echo ""
 
 if [[ -f "$DEMO_TMP/response.ocsp" ]] && [[ -s "$DEMO_TMP/response.ocsp" ]]; then
-    $PKI_BIN ocsp info $DEMO_TMP/response.ocsp 2>/dev/null || echo -e "  ${GREEN}✓${NC} Status: good"
+    run_cmd "$PKI_BIN inspect $DEMO_TMP/response.ocsp"
 
-    resp_size=$(wc -c < "$DEMO_TMP/response.ocsp" | tr -d ' ')
     echo ""
-    echo -e "  ${CYAN}Response size:${NC} $resp_size bytes"
-fi
 
-echo ""
-echo -e "  ${GREEN}✓${NC} Certificate status: ${GREEN}GOOD${NC}"
+    # Cryptographically verify the OCSP response signature
+    run_cmd "$PKI_BIN ocsp verify $DEMO_TMP/response.ocsp --ca $DEMO_TMP/pqc-ca/ca.crt --cert $DEMO_TMP/server.crt"
+fi
 echo ""
 
 pause
@@ -225,15 +223,16 @@ echo "  Inspect the response..."
 echo ""
 
 if [[ -f "$DEMO_TMP/response2.ocsp" ]] && [[ -s "$DEMO_TMP/response2.ocsp" ]]; then
-    $PKI_BIN ocsp info $DEMO_TMP/response2.ocsp 2>/dev/null || echo -e "  ${RED}✗${NC} Status: revoked"
+    run_cmd "$PKI_BIN inspect $DEMO_TMP/response2.ocsp"
 
-    resp_size=$(wc -c < "$DEMO_TMP/response2.ocsp" | tr -d ' ')
     echo ""
-    echo -e "  ${CYAN}Response size:${NC} $resp_size bytes"
-fi
 
-echo ""
-echo -e "  ${RED}✗${NC} Certificate status: ${RED}REVOKED${NC}"
+    # Verify the OCSP response — should show revoked status
+    if ! $PKI_BIN ocsp verify $DEMO_TMP/response2.ocsp --ca $DEMO_TMP/pqc-ca/ca.crt --cert $DEMO_TMP/server.crt 2>&1; then
+        echo ""
+        echo -e "  ${RED}✗${NC} Certificate status: ${RED}REVOKED${NC} (expected!)"
+    fi
+fi
 echo ""
 echo "  ┌─────────────────────────────────────────────────────────────────┐"
 echo "  │  OCSP STATUS COMPARISON                                        │"
