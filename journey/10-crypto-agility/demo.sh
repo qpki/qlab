@@ -29,6 +29,7 @@ echo -e "${BOLD}WHAT WE'LL DO:${NC}"
 echo "  1.  Create Migration CA (ECDSA)"
 echo "  1b. Issue ECDSA server certificate (v1)"
 echo "  2.  Rotate to hybrid (ECDSA + ML-DSA)"
+echo "  2b. Issue hybrid server certificate (v2)"
 echo "  3.  Rotate to full PQC (ML-DSA)"
 echo "  3b. Issue PQC server certificate (v3)"
 echo "  4.  Create trust stores"
@@ -178,7 +179,31 @@ echo ""
 pause
 
 # =============================================================================
-# Step 4: Rotate to Full PQC CA (Phase 3)
+# Step 2b: Issue Hybrid Server Certificate (v2)
+# =============================================================================
+
+print_step "Step 2b: Issue Hybrid Server Certificate (v2)"
+
+echo "  Issuing a server certificate with the hybrid CA..."
+echo ""
+
+run_cmd "$PKI_BIN credential enroll --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --profile $SCRIPT_DIR/profiles/hybrid-tls-server.yaml --var cn=server.example.com"
+
+# Get the new credential ID (skip header, separator, and first credential)
+CRED_V2=$($PKI_BIN credential list --cred-dir $DEMO_TMP/credentials 2>/dev/null | grep -v "^ID" | grep -v "^--" | grep -v "$CRED_V1" | head -1 | awk '{print $1}')
+
+if [[ -n "$CRED_V2" ]]; then
+    echo ""
+    echo -e "  ${CYAN}Credential ID:${NC} $CRED_V2"
+    run_cmd "$PKI_BIN credential export $CRED_V2 --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --out $DEMO_TMP/server-v2.pem"
+fi
+
+echo ""
+
+pause
+
+# =============================================================================
+# Step 3: Rotate to Full PQC CA (Phase 3)
 # =============================================================================
 
 print_step "Step 3: Rotate to Full PQC CA (ML-DSA)"
@@ -225,7 +250,7 @@ echo ""
 run_cmd "$PKI_BIN credential enroll --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --profile $SCRIPT_DIR/profiles/pqc-tls-server.yaml --var cn=server.example.com"
 
 # Get the new credential ID (skip header, separator, and first credential)
-CRED_V3=$($PKI_BIN credential list --cred-dir $DEMO_TMP/credentials 2>/dev/null | grep -v "^ID" | grep -v "^--" | grep -v "$CRED_V1" | head -1 | awk '{print $1}')
+CRED_V3=$($PKI_BIN credential list --cred-dir $DEMO_TMP/credentials 2>/dev/null | grep -v "^ID" | grep -v "^--" | grep -v "$CRED_V1" | grep -v "$CRED_V2" | head -1 | awk '{print $1}')
 
 if [[ -n "$CRED_V3" ]]; then
     echo ""
@@ -385,6 +410,10 @@ echo ""
 
 echo "  === v1 Certificate (ECDSA) ==="
 run_cmd "$PKI_BIN inspect $DEMO_TMP/server-v1.pem"
+
+echo ""
+echo "  === v2 Certificate (Hybrid) ==="
+run_cmd "$PKI_BIN inspect $DEMO_TMP/server-v2.pem"
 
 echo ""
 echo "  === v3 Certificate (ML-DSA) ==="
