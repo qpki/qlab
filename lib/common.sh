@@ -10,11 +10,15 @@ source "$LIB_DIR/banner.sh"
 # Get the lab root directory
 LAB_ROOT="$(cd "$LIB_DIR/.." && pwd)"
 
-# QPKI binary location (QLAB uses QPKI for all PKI operations)
-PKI_BIN="$LAB_ROOT/bin/qpki"
-
-# Add bin directory to PATH so 'qpki' command works
-export PATH="$LAB_ROOT/bin:$PATH"
+# QPKI binary location — prefer system-installed qpki, fallback to local copy
+if command -v qpki &>/dev/null; then
+    PKI_BIN="$(command -v qpki)"
+elif [[ -x "$LAB_ROOT/bin/qpki" ]]; then
+    PKI_BIN="$LAB_ROOT/bin/qpki"
+    export PATH="$LAB_ROOT/bin:$PATH"
+else
+    PKI_BIN="qpki"  # Will fail later with a clear error in setup_demo
+fi
 
 # Output directory for demo artifacts (local to each demo)
 # Uses SCRIPT_DIR from the calling demo script

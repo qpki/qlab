@@ -7,6 +7,7 @@ $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LabRoot = Split-Path -Parent $ScriptDir
+$GithubRepo = "qpki/qpki"
 
 Write-Host ""
 Write-Host "==============================================" -ForegroundColor Cyan
@@ -20,17 +21,27 @@ $Arch = if ([Environment]::Is64BitOperatingSystem) { "amd64" } else { "386" }
 Write-Host "Detected: windows / $Arch" -ForegroundColor Green
 
 # =============================================================================
-# Check if binary already exists
+# Check if qpki is already installed (system PATH or local fallback)
 # =============================================================================
 
-$BinaryPath = Join-Path $LabRoot "bin\qpki.exe"
+$ExistingBin = $null
+$SystemQpki = Get-Command qpki -ErrorAction SilentlyContinue
+$LocalBin = Join-Path $LabRoot "bin\qpki.exe"
 
-if (Test-Path $BinaryPath) {
-    $InstalledVersion = (& $BinaryPath --version 2>$null) -replace '.*version\s+(\S+).*','$1'
+if ($SystemQpki) {
+    $ExistingBin = $SystemQpki.Source
+} elseif (Test-Path $LocalBin) {
+    $ExistingBin = $LocalBin
+}
+
+$InstallDir = "C:\Program Files\qpki"
+
+if ($ExistingBin) {
+    $InstalledVersion = (& $ExistingBin --version 2>$null) -replace '.*version\s+(\S+).*','$1'
 
     # Check latest version from GitHub
     try {
-        $ReleaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/qpki/qpki/releases/latest" -UseBasicParsing
+        $ReleaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/$GithubRepo/releases/latest" -UseBasicParsing
         $LatestTag = $ReleaseInfo.tag_name -replace "^v", ""
     } catch {
         $LatestTag = ""
@@ -39,6 +50,7 @@ if (Test-Path $BinaryPath) {
     if ($LatestTag -and ($InstalledVersion -ne $LatestTag)) {
         Write-Host ""
         Write-Host "QPKI update available: $InstalledVersion -> $LatestTag" -ForegroundColor Yellow
+        Write-Host "  Installed at: $ExistingBin" -ForegroundColor DarkGray
         Write-Host ""
         $response = Read-Host "  Update now? [Y/n]"
         if ($response -match '^[nN]') {
@@ -48,11 +60,12 @@ if (Test-Path $BinaryPath) {
         }
         Write-Host ""
         Write-Host "  Updating..." -ForegroundColor Cyan
-        Remove-Item $BinaryPath
+        $InstallDir = Split-Path -Parent $ExistingBin
         # Fall through to download
     } else {
         Write-Host ""
         Write-Host "QPKI $InstalledVersion is up to date." -ForegroundColor Green
+        Write-Host "  Location: $ExistingBin" -ForegroundColor DarkGray
         Write-Host ""
         exit 0
     }
@@ -62,7 +75,6 @@ if (Test-Path $BinaryPath) {
 # Download pre-built binary from GitHub releases
 # =============================================================================
 
-$GithubRepo = "qpki/qpki"
 $Version = if ($env:PKI_VERSION) { $env:PKI_VERSION } else { "latest" }
 
 Write-Host ""
@@ -102,12 +114,6 @@ $DownloadUrl = "https://github.com/$GithubRepo/releases/download/$VersionTag/$Bi
 
 Write-Host "Downloading: $BinaryName"
 
-# Create bin directory
-$BinDir = Join-Path $LabRoot "bin"
-if (-not (Test-Path $BinDir)) {
-    New-Item -ItemType Directory -Path $BinDir | Out-Null
-}
-
 # Download and extract
 $TempDir = Join-Path $env:TEMP "qpki-install-$(Get-Random)"
 New-Item -ItemType Directory -Path $TempDir | Out-Null
@@ -121,11 +127,24 @@ try {
     Write-Host "Extracting..."
     Expand-Archive -Path $ZipPath -DestinationPath $TempDir -Force
 
-    # Find and install the binary
+    # Find the binary
     $ExtractedBinary = Get-ChildItem -Path $TempDir -Filter "qpki.exe" -Recurse | Select-Object -First 1
 
     if ($ExtractedBinary) {
+        # Install to InstallDir
+        if (-not (Test-Path $InstallDir)) {
+            New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
+        }
+        $BinaryPath = Join-Path $InstallDir "qpki.exe"
         Move-Item -Path $ExtractedBinary.FullName -Destination $BinaryPath -Force
+
+        # Add to PATH if not already there
+        $MachinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+        if ($MachinePath -notlike "*$InstallDir*") {
+            Write-Host "Adding $InstallDir to system PATH..." -ForegroundColor DarkGray
+            [Environment]::SetEnvironmentVariable("Path", "$MachinePath;$InstallDir", "Machine")
+            $env:Path = "$env:Path;$InstallDir"
+        }
 
         Write-Host ""
         Write-Host "==============================================" -ForegroundColor Green
@@ -167,8 +186,8 @@ function Show-ManualInstructions {
     Write-Host "  1. Clone the QPKI repository:"
     Write-Host "     git clone https://github.com/$GithubRepo.git" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "  2. Build the binary:"
-    Write-Host "     cd post-quantum-pki; go build -o ..\post-quantum-pki-lab\bin\qpki.exe .\cmd\qpki" -ForegroundColor Cyan
+    Write-Host "  2. Build and install:"
+    Write-Host "     cd qpki; go install ./cmd/qpki" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  3. Run this script again to verify:"
     Write-Host "     .\tooling\install.ps1" -ForegroundColor Cyan

@@ -14,7 +14,11 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 CYAN='\033[0;36m'
+DIM='\033[2m'
 NC='\033[0m'
+
+GITHUB_REPO="qpki/qpki"
+INSTALL_DIR="/usr/local/bin"
 
 echo -e "${CYAN}"
 echo "=============================================="
@@ -43,18 +47,26 @@ esac
 echo -e "${GREEN}Detected:${NC} $OS / $ARCH"
 
 # =============================================================================
-# Check if binary already exists
+# Check if qpki is already installed (system PATH or local fallback)
 # =============================================================================
 
-if [[ -x "$LAB_ROOT/bin/qpki" ]]; then
-    INSTALLED_VERSION=$("$LAB_ROOT/bin/qpki" --version 2>/dev/null | awk '{print $3}')
+EXISTING_BIN=""
+if command -v qpki &>/dev/null; then
+    EXISTING_BIN="$(command -v qpki)"
+elif [[ -x "$LAB_ROOT/bin/qpki" ]]; then
+    EXISTING_BIN="$LAB_ROOT/bin/qpki"
+fi
+
+if [[ -n "$EXISTING_BIN" ]]; then
+    INSTALLED_VERSION=$("$EXISTING_BIN" --version 2>/dev/null | awk '{print $3}')
 
     # Check latest version from GitHub
-    LATEST_TAG=$(curl -s "https://api.github.com/repos/qpki/qpki/releases/latest" | grep '"tag_name"' | sed -E 's/.*"tag_name": *"v?([^"]+)".*/\1/')
+    LATEST_TAG=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/releases/latest" | grep '"tag_name"' | sed -E 's/.*"tag_name": *"v?([^"]+)".*/\1/')
 
     if [[ -n "$LATEST_TAG" && "$INSTALLED_VERSION" != "$LATEST_TAG" ]]; then
         echo ""
         echo -e "${YELLOW}QPKI update available: ${INSTALLED_VERSION} → ${LATEST_TAG}${NC}"
+        echo -e "${DIM}  Installed at: $EXISTING_BIN${NC}"
         echo ""
         read -p "$(echo -e "  Update now? [Y/n]: ")" response
         case "$response" in
@@ -66,13 +78,14 @@ if [[ -x "$LAB_ROOT/bin/qpki" ]]; then
             *)
                 echo ""
                 echo -e "  ${CYAN}Updating...${NC}"
-                rm "$LAB_ROOT/bin/qpki"
+                INSTALL_DIR="$(dirname "$EXISTING_BIN")"
                 # Fall through to download
                 ;;
         esac
     else
         echo ""
         echo -e "${GREEN}QPKI ${INSTALLED_VERSION} is up to date.${NC}"
+        echo -e "${DIM}  Location: $EXISTING_BIN${NC}"
         echo ""
         exit 0
     fi
@@ -82,7 +95,6 @@ fi
 # Download pre-built binary from GitHub releases
 # =============================================================================
 
-GITHUB_REPO="qpki/qpki"
 VERSION="${PKI_VERSION:-latest}"
 
 echo ""
@@ -114,9 +126,6 @@ DOWNLOAD_URL="https://github.com/$GITHUB_REPO/releases/download/$VERSION_TAG/$BI
 
 echo -e "Downloading: $BINARY_NAME"
 
-# Create bin directory
-mkdir -p "$LAB_ROOT/bin"
-
 # Download and extract
 TEMP_DIR=$(mktemp -d)
 trap "rm -rf $TEMP_DIR" EXIT
@@ -125,28 +134,43 @@ if curl -sL --fail -o "$TEMP_DIR/$BINARY_NAME" "$DOWNLOAD_URL"; then
     echo -e "Extracting..."
     tar xzf "$TEMP_DIR/$BINARY_NAME" -C "$TEMP_DIR"
 
-    # Find and install the binary
-    if [[ -f "$TEMP_DIR/qpki" ]]; then
-        mv "$TEMP_DIR/qpki" "$LAB_ROOT/bin/qpki"
-        chmod +x "$LAB_ROOT/bin/qpki"
-
-        echo ""
-        echo -e "${GREEN}=============================================="
-        echo "  QPKI installed successfully!"
-        echo "=============================================="
-        echo -e "${NC}"
-        echo ""
-        "$LAB_ROOT/bin/qpki" --version 2>/dev/null || true
-        echo ""
-        echo -e "Binary location: ${CYAN}$LAB_ROOT/bin/qpki${NC}"
-        echo ""
-        echo -e "You can now run the demos:"
-        echo -e "  ${CYAN}./journey/00-revelation/demo.sh${NC}"
-        echo ""
-        exit 0
-    else
+    if [[ ! -f "$TEMP_DIR/qpki" ]]; then
         echo -e "${RED}Binary not found in archive${NC}"
+        exit 1
     fi
+
+    # Install to INSTALL_DIR, fallback to qlab/bin if no write access
+    if [[ -w "$INSTALL_DIR" ]] || [[ ! -d "$INSTALL_DIR" && -w "$(dirname "$INSTALL_DIR")" ]]; then
+        mkdir -p "$INSTALL_DIR"
+        mv "$TEMP_DIR/qpki" "$INSTALL_DIR/qpki"
+        chmod +x "$INSTALL_DIR/qpki"
+    elif command -v sudo &>/dev/null; then
+        echo -e "${DIM}  Writing to $INSTALL_DIR requires elevated privileges...${NC}"
+        sudo mkdir -p "$INSTALL_DIR"
+        sudo mv "$TEMP_DIR/qpki" "$INSTALL_DIR/qpki"
+        sudo chmod +x "$INSTALL_DIR/qpki"
+    else
+        echo -e "${YELLOW}Cannot write to $INSTALL_DIR, installing to $LAB_ROOT/bin/ instead${NC}"
+        INSTALL_DIR="$LAB_ROOT/bin"
+        mkdir -p "$INSTALL_DIR"
+        mv "$TEMP_DIR/qpki" "$INSTALL_DIR/qpki"
+        chmod +x "$INSTALL_DIR/qpki"
+    fi
+
+    echo ""
+    echo -e "${GREEN}=============================================="
+    echo "  QPKI installed successfully!"
+    echo "=============================================="
+    echo -e "${NC}"
+    echo ""
+    "$INSTALL_DIR/qpki" --version 2>/dev/null || true
+    echo ""
+    echo -e "Binary location: ${CYAN}$INSTALL_DIR/qpki${NC}"
+    echo ""
+    echo -e "You can now run the demos:"
+    echo -e "  ${CYAN}./journey/00-revelation/demo.sh${NC}"
+    echo ""
+    exit 0
 else
     echo -e "${RED}Download failed${NC}"
 fi
@@ -166,8 +190,8 @@ echo ""
 echo "  1. Clone the QPKI repository:"
 echo -e "     ${CYAN}git clone https://github.com/$GITHUB_REPO.git${NC}"
 echo ""
-echo "  2. Build the binary:"
-echo -e "     ${CYAN}cd qpki && go build -o ../qlab/bin/qpki ./cmd/qpki${NC}"
+echo "  2. Build and install:"
+echo -e "     ${CYAN}cd qpki && make install${NC}"
 echo ""
 echo "  3. Run this script again to verify:"
 echo -e "     ${CYAN}./tooling/install.sh${NC}"

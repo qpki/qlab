@@ -42,10 +42,12 @@ cd qlab
 ./tooling/install.sh
 ```
 
+The install script downloads the latest [qpki](https://github.com/qpki/qpki) release to `/usr/local/bin`. Run it again to check for updates.
+
 ### Windows
 
 ```powershell
-# 1. Install QPKI (PowerShell)
+# 1. Install QPKI (PowerShell, run as Administrator)
 git clone https://github.com/qpki/qlab.git
 cd qlab
 .\tooling\install.ps1
