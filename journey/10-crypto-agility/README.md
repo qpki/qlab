@@ -269,37 +269,42 @@ qpki ca export --ca-dir output/ca --all --out output/trust-transition.pem
 ### Step 5: Verify Certificates Against Trust Stores
 
 ```bash
-# Legacy cert validates with legacy trust store (legacy clients scenario)
-qpki cert verify output/server-v1.pem --ca output/trust-legacy.pem
+# Full interoperability matrix: every cert × every trust store
+# OK = cert was signed by a CA in the trust store
+# FAIL = expected — proves trust isolation works correctly
 
-# Hybrid cert validates with transition trust store (transition clients scenario)
-qpki cert verify output/server-v2.pem --ca output/trust-transition.pem
+qpki cert verify output/server-v1.pem --ca output/trust-legacy.pem       # ✓ OK
+qpki cert verify output/server-v1.pem --ca output/trust-transition.pem   # ✓ OK
+qpki cert verify output/server-v1.pem --ca output/trust-modern.pem       # ✗ FAIL
 
-# PQC cert validates with modern trust store (modern clients scenario)
-qpki cert verify output/server-v3.pem --ca output/trust-modern.pem
+qpki cert verify output/server-v2.pem --ca output/trust-legacy.pem       # ✗ FAIL
+qpki cert verify output/server-v2.pem --ca output/trust-transition.pem   # ✓ OK
+qpki cert verify output/server-v2.pem --ca output/trust-modern.pem       # ✗ FAIL
 
-# Transition trust store accepts ALL certificate versions
-# This is the key to gradual migration - all certs work during transition
-qpki cert verify output/server-v1.pem --ca output/trust-transition.pem
-qpki cert verify output/server-v2.pem --ca output/trust-transition.pem
-qpki cert verify output/server-v3.pem --ca output/trust-transition.pem
+qpki cert verify output/server-v3.pem --ca output/trust-legacy.pem       # ✗ FAIL
+qpki cert verify output/server-v3.pem --ca output/trust-transition.pem   # ✓ OK
+qpki cert verify output/server-v3.pem --ca output/trust-modern.pem       # ✓ OK
 ```
 
 ```
 INTEROPERABILITY MATRIX
-───────────────────────────────────────────
-  Certificate    │  Trust Store        │  Result
-─────────────────┼─────────────────────┼─────────
-  v1 (ECDSA)     │  trust-legacy.pem   │  ✓ OK
-  v2 (Hybrid)    │  trust-transition   │  ✓ OK
-  v3 (ML-DSA)    │  trust-modern.pem   │  ✓ OK
-  v1 (ECDSA)     │  trust-transition   │  ✓ OK
-  v2 (Hybrid)    │  trust-transition   │  ✓ OK
-  v3 (ML-DSA)    │  trust-transition   │  ✓ OK
-───────────────────────────────────────────
+───────────────┬─────────────────────┬─────────
+  Certificate  │  Trust Store        │  Result
+───────────────┼─────────────────────┼─────────
+  v1 (ECDSA)   │  trust-legacy       │  ✓ OK
+  v1 (ECDSA)   │  trust-transition   │  ✓ OK
+  v1 (ECDSA)   │  trust-modern       │  ✗ FAIL
+  v2 (Hybrid)  │  trust-legacy       │  ✗ FAIL
+  v2 (Hybrid)  │  trust-transition   │  ✓ OK
+  v2 (Hybrid)  │  trust-modern       │  ✗ FAIL
+  v3 (ML-DSA)  │  trust-legacy       │  ✗ FAIL
+  v3 (ML-DSA)  │  trust-transition   │  ✓ OK
+  v3 (ML-DSA)  │  trust-modern       │  ✓ OK
+───────────────┴─────────────────────┴─────────
 
-Key insight: The transition bundle supports ALL certificate versions,
-enabling gradual client migration without breaking existing services.
+Key insight: Each cert only works with trust stores containing its CA version.
+The transition bundle is the key to gradual migration — all certs work.
+FAIL is expected: it proves trust isolation works correctly.
 ```
 
 ### Step 6: Simulate Rollback

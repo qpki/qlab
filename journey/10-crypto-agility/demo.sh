@@ -317,58 +317,49 @@ print_step "Step 5: Verify Certificates Against Trust Stores"
 echo "  Testing that certificates validate correctly with their trust stores:"
 echo ""
 
-echo "  ┌─────────────────────────────────────────────────────────────────┐"
-echo "  │  INTEROPERABILITY MATRIX                                       │"
-echo "  ├─────────────────────────────────────────────────────────────────┤"
+echo "  ┌──────────────────────────────────────────────────────────────────┐"
+echo "  │  INTEROPERABILITY MATRIX                                        │"
+echo "  ├───────────────┬─────────────────────┬──────────────────────────┤"
+echo "  │  Certificate  │  Trust Store        │  Result                  │"
+echo "  ├───────────────┼─────────────────────┼──────────────────────────┤"
 
-# Test 1: Legacy cert with legacy trust
-echo -n "  │  v1 cert + trust-legacy.pem   │  "
-if $PKI_BIN cert verify $DEMO_TMP/server-v1.pem --ca $DEMO_TMP/trust-legacy.pem > /dev/null 2>&1; then
-    echo -e "${GREEN}✓ OK${NC}                          │"
-else
-    echo -e "${RED}✗ FAIL${NC}                        │"
-fi
+# v1 tests
+for trust in trust-legacy trust-transition trust-modern; do
+    echo -n "  │  v1 (ECDSA)   │  ${trust}$(printf '%*s' $((20 - ${#trust})) '')│  "
+    if $PKI_BIN cert verify $DEMO_TMP/server-v1.pem --ca $DEMO_TMP/${trust}.pem > /dev/null 2>&1; then
+        echo -e "${GREEN}✓ OK${NC}                     │"
+    else
+        echo -e "${RED}✗ FAIL${NC}                   │"
+    fi
+done
 
-# Test 2: Hybrid cert with transition trust
-echo -n "  │  v2 cert + trust-transition   │  "
-if $PKI_BIN cert verify $DEMO_TMP/server-v2.pem --ca $DEMO_TMP/trust-transition.pem > /dev/null 2>&1; then
-    echo -e "${GREEN}✓ OK${NC}                          │"
-else
-    echo -e "${RED}✗ FAIL${NC}                        │"
-fi
+# v2 tests
+for trust in trust-legacy trust-transition trust-modern; do
+    echo -n "  │  v2 (Hybrid)  │  ${trust}$(printf '%*s' $((20 - ${#trust})) '')│  "
+    if $PKI_BIN cert verify $DEMO_TMP/server-v2.pem --ca $DEMO_TMP/${trust}.pem > /dev/null 2>&1; then
+        echo -e "${GREEN}✓ OK${NC}                     │"
+    else
+        echo -e "${RED}✗ FAIL${NC}                   │"
+    fi
+done
 
-# Test 3: PQC cert with modern trust
-echo -n "  │  v3 cert + trust-modern.pem   │  "
-if $PKI_BIN cert verify $DEMO_TMP/server-v3.pem --ca $DEMO_TMP/trust-modern.pem > /dev/null 2>&1; then
-    echo -e "${GREEN}✓ OK${NC}                          │"
-else
-    echo -e "${RED}✗ FAIL${NC}                        │"
-fi
+# v3 tests
+for trust in trust-legacy trust-transition trust-modern; do
+    echo -n "  │  v3 (ML-DSA)  │  ${trust}$(printf '%*s' $((20 - ${#trust})) '')│  "
+    if $PKI_BIN cert verify $DEMO_TMP/server-v3.pem --ca $DEMO_TMP/${trust}.pem > /dev/null 2>&1; then
+        echo -e "${GREEN}✓ OK${NC}                     │"
+    else
+        echo -e "${RED}✗ FAIL${NC}                   │"
+    fi
+done
 
-# Test 4: Legacy cert with transition trust
-echo -n "  │  v1 cert + trust-transition   │  "
-if $PKI_BIN cert verify $DEMO_TMP/server-v1.pem --ca $DEMO_TMP/trust-transition.pem > /dev/null 2>&1; then
-    echo -e "${GREEN}✓ OK${NC}                          │"
-else
-    echo -e "${RED}✗ FAIL${NC}                        │"
-fi
-
-# Test 5: PQC cert with transition trust
-echo -n "  │  v3 cert + trust-transition   │  "
-if $PKI_BIN cert verify $DEMO_TMP/server-v3.pem --ca $DEMO_TMP/trust-transition.pem > /dev/null 2>&1; then
-    echo -e "${GREEN}✓ OK${NC}                          │"
-else
-    echo -e "${RED}✗ FAIL${NC}                        │"
-fi
-
-echo "  │                                                                 │"
-echo "  └─────────────────────────────────────────────────────────────────┘"
+echo "  └───────────────┴─────────────────────┴──────────────────────────┘"
 echo ""
 
 echo "  Key insight:"
-echo "    - Old certificates (v1) remain valid after CA rotation"
+echo "    - Each cert only works with trust stores that contain its CA version"
 echo "    - Transition bundle supports ALL certificate versions"
-echo "    - Clients choose which trust store to use based on their capabilities"
+echo "    - FAIL is expected: it proves trust isolation works correctly"
 echo ""
 
 pause
