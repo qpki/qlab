@@ -47,9 +47,9 @@ Yes. Same HTTP protocol, same request/response format. Only signature sizes chan
 2. Start OCSP responder
 2b. Issue TLS certificate
 3. Query certificate status (GOOD)
-4. Revoke the certificate
-3b. Query again (REVOKED)
-2c. Stop OCSP responder
+3b. Revoke the certificate
+4. Query again (REVOKED)
+5. Stop OCSP responder
 
 ---
 
@@ -139,7 +139,7 @@ qpki ocsp info output/response.ocsp
 qpki cert revoke <serial> --ca-dir output/pqc-ca --reason keyCompromise
 ```
 
-### Step 3b: Query Again (REVOKED)
+### Step 4: Query Again (REVOKED)
 
 ```bash
 # Query again - status changes immediately! (CRL would take hours)
@@ -153,7 +153,7 @@ qpki ocsp info output/response2.ocsp
 # Status: revoked
 ```
 
-### Step 2c: Stop OCSP Responder
+### Step 5: Stop OCSP Responder
 
 ```bash
 # Stop the OCSP responder

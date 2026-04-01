@@ -44,9 +44,9 @@ echo "  1b. Issue OCSP responder certificate"
 echo "  2.  Start OCSP responder"
 echo "  2b. Issue TLS certificate"
 echo "  3.  Query certificate status (GOOD)"
-echo "  4.  Revoke the certificate"
-echo "  3b. Query again (REVOKED)"
-echo "  2c. Stop OCSP responder"
+echo "  3b. Revoke the certificate"
+echo "  4.  Query again (REVOKED)"
+echo "  5.  Stop OCSP responder"
 echo ""
 
 echo -e "${DIM}OCSP provides immediate revocation status - no waiting for CRL refresh.${NC}"
@@ -208,7 +208,7 @@ pause
 # Step 7: Query Again (REVOKED)
 # =============================================================================
 
-print_step "Step 3b: Query Again (REVOKED)"
+print_step "Step 4: Query Again (REVOKED)"
 
 echo "  Query again - status should change immediately!"
 echo ""
@@ -250,7 +250,7 @@ pause
 # Step 8: Stop OCSP Responder
 # =============================================================================
 
-print_step "Step 2c: Stop OCSP Responder"
+print_step "Step 5: Stop OCSP Responder"
 
 echo "  Stopping the OCSP responder..."
 echo ""
