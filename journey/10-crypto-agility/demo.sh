@@ -27,11 +27,11 @@ echo ""
 
 echo -e "${BOLD}WHAT WE'LL DO:${NC}"
 echo "  1.  Create Migration CA (ECDSA)"
-echo "  1b. Issue ECDSA server certificate (v1)"
-echo "  2.  Rotate to hybrid (ECDSA + ML-DSA)"
-echo "  2b. Issue hybrid server certificate (v2)"
-echo "  3.  Rotate to full PQC (ML-DSA)"
-echo "  3b. Issue PQC server certificate (v3)"
+echo "  1b. Issue ECDSA server certificate"
+echo "  2.  Rotate CA to hybrid (ECDSA + ML-DSA)"
+echo "  2b. Rotate credential to hybrid"
+echo "  3.  Rotate CA to full PQC (ML-DSA)"
+echo "  3b. Rotate credential to PQC"
 echo "  4.  Create trust stores"
 echo "  5.  Verify certificates against trust stores"
 echo "  6.  Simulate rollback"
@@ -121,21 +121,21 @@ pause
 # Step 2: Issue ECDSA Server Certificate (v1)
 # =============================================================================
 
-print_step "Step 1b: Issue ECDSA Server Certificate (v1)"
+print_step "Step 1b: Issue ECDSA Server Certificate"
 
 echo "  Issuing a server certificate with ECDSA..."
-echo "  This v1 certificate will be used to test backward compatibility."
+echo "  This initial certificate will be rotated as the CA migrates."
 echo ""
 
 run_cmd "$PKI_BIN credential enroll --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --profile $SCRIPT_DIR/profiles/classic-tls-server.yaml --var cn=server.example.com"
 
 # Capture the credential ID from the output (skip header and separator lines)
-CRED_V1=$($PKI_BIN credential list --cred-dir $DEMO_TMP/credentials 2>/dev/null | grep -v "^ID" | grep -v "^--" | head -1 | awk '{print $1}')
+CRED_ID=$($PKI_BIN credential list --cred-dir $DEMO_TMP/credentials 2>/dev/null | grep -v "^ID" | grep -v "^--" | head -1 | awk '{print $1}')
 
-if [[ -n "$CRED_V1" ]]; then
+if [[ -n "$CRED_ID" ]]; then
     echo ""
-    echo -e "  ${CYAN}Credential ID:${NC} $CRED_V1"
-    run_cmd "$PKI_BIN credential export $CRED_V1 --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --out $DEMO_TMP/server-v1.pem"
+    echo -e "  ${CYAN}Credential ID:${NC} $CRED_ID"
+    run_cmd "$PKI_BIN credential export $CRED_ID --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --out $DEMO_TMP/server-v1.pem"
 fi
 
 echo ""
@@ -182,21 +182,16 @@ pause
 # Step 2b: Issue Hybrid Server Certificate (v2)
 # =============================================================================
 
-print_step "Step 2b: Issue Hybrid Server Certificate (v2)"
+print_step "Step 2b: Rotate Credential to Hybrid"
 
-echo "  Issuing a server certificate with the hybrid CA..."
+echo "  Same server, new algorithm — zero downtime migration."
+echo "  The credential is rotated, not recreated."
 echo ""
 
-run_cmd "$PKI_BIN credential enroll --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --profile $SCRIPT_DIR/profiles/hybrid-tls-server.yaml --var cn=server.example.com"
+run_cmd "$PKI_BIN credential rotate $CRED_ID --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --profile $SCRIPT_DIR/profiles/hybrid-tls-server.yaml"
 
-# Get the new credential ID (skip header, separator, and first credential)
-CRED_V2=$($PKI_BIN credential list --cred-dir $DEMO_TMP/credentials 2>/dev/null | grep -v "^ID" | grep -v "^--" | grep -v "$CRED_V1" | head -1 | awk '{print $1}')
-
-if [[ -n "$CRED_V2" ]]; then
-    echo ""
-    echo -e "  ${CYAN}Credential ID:${NC} $CRED_V2"
-    run_cmd "$PKI_BIN credential export $CRED_V2 --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --out $DEMO_TMP/server-v2.pem"
-fi
+echo ""
+run_cmd "$PKI_BIN credential export $CRED_ID --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --out $DEMO_TMP/server-v2.pem"
 
 echo ""
 
@@ -242,21 +237,16 @@ pause
 # Step 5: Issue PQC Server Certificate (v3)
 # =============================================================================
 
-print_step "Step 3b: Issue PQC Server Certificate (v3)"
+print_step "Step 3b: Rotate Credential to PQC"
 
-echo "  Issuing a server certificate with ML-DSA..."
+echo "  Final migration step — full post-quantum."
+echo "  Same credential, now with ML-DSA-65."
 echo ""
 
-run_cmd "$PKI_BIN credential enroll --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --profile $SCRIPT_DIR/profiles/pqc-tls-server.yaml --var cn=server.example.com"
+run_cmd "$PKI_BIN credential rotate $CRED_ID --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --profile $SCRIPT_DIR/profiles/pqc-tls-server.yaml"
 
-# Get the new credential ID (skip header, separator, and first credential)
-CRED_V3=$($PKI_BIN credential list --cred-dir $DEMO_TMP/credentials 2>/dev/null | grep -v "^ID" | grep -v "^--" | grep -v "$CRED_V1" | grep -v "$CRED_V2" | head -1 | awk '{print $1}')
-
-if [[ -n "$CRED_V3" ]]; then
-    echo ""
-    echo -e "  ${CYAN}Credential ID:${NC} $CRED_V3"
-    run_cmd "$PKI_BIN credential export $CRED_V3 --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --out $DEMO_TMP/server-v3.pem"
-fi
+echo ""
+run_cmd "$PKI_BIN credential export $CRED_ID --ca-dir $DEMO_TMP/ca --cred-dir $DEMO_TMP/credentials --out $DEMO_TMP/server-v3.pem"
 
 echo ""
 

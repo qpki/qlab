@@ -149,11 +149,11 @@ CURRENT SITUATION
 ## What We'll Do
 
 1. Create Migration CA (ECDSA)
-1b. Issue ECDSA server certificate (v1)
-2. Rotate to hybrid (ECDSA + ML-DSA)
-2b. Issue hybrid server certificate (v2) *(optional)*
-3. Rotate to full PQC (ML-DSA)
-3b. Issue PQC server certificate (v3)
+1b. Issue ECDSA server certificate
+2. Rotate CA to hybrid (ECDSA + ML-DSA)
+2b. Rotate credential to hybrid
+3. Rotate CA to full PQC (ML-DSA)
+3b. Rotate credential to PQC
 4. Create trust stores
 5. Verify certificates against trust stores
 6. Simulate rollback
@@ -208,14 +208,14 @@ qpki ca versions --ca-dir output/ca
 # v2       active    ecdsa-p256+ml-dsa-65
 ```
 
-### Step 2b: Issue Hybrid Server Certificate (v2)
+### Step 2b: Rotate Credential to Hybrid
 
 ```bash
-# Issue hybrid server certificate (optional but useful for testing)
-qpki credential enroll --ca-dir output/ca \
+# Same server, new algorithm — zero downtime migration
+qpki credential rotate <credential-id> \
+    --ca-dir output/ca \
     --cred-dir output/credentials \
-    --profile profiles/hybrid-tls-server.yaml \
-    --var cn=server.example.com
+    --profile profiles/hybrid-tls-server.yaml
 
 qpki credential export <credential-id> \
     --ca-dir output/ca \
@@ -238,14 +238,14 @@ qpki ca versions --ca-dir output/ca
 # v3       active    ml-dsa-65
 ```
 
-### Step 3b: Issue PQC Server Certificate (v3)
+### Step 3b: Rotate Credential to PQC
 
 ```bash
-# Issue PQC server certificate
-qpki credential enroll --ca-dir output/ca \
+# Final migration — full post-quantum
+qpki credential rotate <credential-id> \
+    --ca-dir output/ca \
     --cred-dir output/credentials \
-    --profile profiles/pqc-tls-server.yaml \
-    --var cn=server.example.com
+    --profile profiles/pqc-tls-server.yaml
 
 qpki credential export <credential-id> \
     --ca-dir output/ca \
