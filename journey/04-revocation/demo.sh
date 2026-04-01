@@ -52,10 +52,10 @@ print_step "Step 1: Create CA"
 echo "  First, we need a CA to issue and revoke certificates."
 echo ""
 
-run_cmd "$PKI_BIN ca init --profile $PROFILES/pqc-ca.yaml --var cn=\"Demo CA\" --ca-dir $DEMO_TMP/demo-ca"
+run_cmd "$PKI_BIN ca init --profile $PROFILES/pqc-ca.yaml --var cn=\"Demo CA\" --ca-dir $DEMO_TMP/pqc-ca"
 
 # Export CA certificate for verification
-$PKI_BIN ca export --ca-dir $DEMO_TMP/demo-ca --out $DEMO_TMP/demo-ca/ca.crt
+$PKI_BIN ca export --ca-dir $DEMO_TMP/pqc-ca --out $DEMO_TMP/pqc-ca/ca.crt
 
 echo ""
 
@@ -74,7 +74,7 @@ run_cmd "$PKI_BIN csr gen --algorithm ml-dsa-65 --keyout $DEMO_TMP/server.key --
 
 echo ""
 
-run_cmd "$PKI_BIN cert issue --ca-dir $DEMO_TMP/demo-ca --profile $PROFILES/pqc-tls-server.yaml --csr $DEMO_TMP/server.csr --out $DEMO_TMP/server.crt"
+run_cmd "$PKI_BIN cert issue --ca-dir $DEMO_TMP/pqc-ca --profile $PROFILES/pqc-tls-server.yaml --csr $DEMO_TMP/server.csr --out $DEMO_TMP/server.crt"
 
 # Get serial number
 SERIAL=$(openssl x509 -in $DEMO_TMP/server.crt -noout -serial 2>/dev/null | cut -d= -f2)
@@ -123,7 +123,7 @@ echo "    4 = superseded"
 echo "    5 = cessationOfOperation"
 echo ""
 
-run_cmd "$PKI_BIN cert revoke $SERIAL --ca-dir $DEMO_TMP/demo-ca --reason keyCompromise"
+run_cmd "$PKI_BIN cert revoke $SERIAL --ca-dir $DEMO_TMP/pqc-ca --reason keyCompromise"
 
 echo ""
 echo -e "  ${GREEN}✓${NC} Certificate revoked"
@@ -141,10 +141,10 @@ echo "  The CRL is a signed list of all revoked certificates."
 echo "  Clients download it to check certificate validity."
 echo ""
 
-run_cmd "$PKI_BIN crl gen --ca-dir $DEMO_TMP/demo-ca"
+run_cmd "$PKI_BIN crl gen --ca-dir $DEMO_TMP/pqc-ca"
 
-if [[ -f "$DEMO_TMP/demo-ca/crl/ca.crl" ]]; then
-    crl_size=$(wc -c < "$DEMO_TMP/demo-ca/crl/ca.crl" | tr -d ' ')
+if [[ -f "$DEMO_TMP/pqc-ca/crl/ca.crl" ]]; then
+    crl_size=$(wc -c < "$DEMO_TMP/pqc-ca/crl/ca.crl" | tr -d ' ')
     echo ""
     echo -e "  ${BOLD}CRL generated:${NC}"
     echo -e "    Size: $crl_size bytes"
@@ -156,7 +156,7 @@ echo ""
 echo "  View the CRL contents..."
 echo ""
 
-run_cmd "$PKI_BIN inspect $DEMO_TMP/demo-ca/crl/ca.crl"
+run_cmd "$PKI_BIN inspect $DEMO_TMP/pqc-ca/crl/ca.crl"
 
 echo ""
 
@@ -171,9 +171,9 @@ print_step "Step 3: Verify Revocation Status"
 echo "  Let's verify the certificate is now rejected..."
 echo ""
 
-echo -e "  ${DIM}$ qpki cert verify $DEMO_TMP/server.crt --ca $DEMO_TMP/demo-ca/ca.crt --crl $DEMO_TMP/demo-ca/crl/ca.crl${NC}"
+echo -e "  ${DIM}$ qpki cert verify $DEMO_TMP/server.crt --ca $DEMO_TMP/pqc-ca/ca.crt --crl $DEMO_TMP/pqc-ca/crl/ca.crl${NC}"
 
-if ! $PKI_BIN cert verify $DEMO_TMP/server.crt --ca $DEMO_TMP/demo-ca/ca.crt --crl $DEMO_TMP/demo-ca/crl/ca.crl 2>&1; then
+if ! $PKI_BIN cert verify $DEMO_TMP/server.crt --ca $DEMO_TMP/pqc-ca/ca.crt --crl $DEMO_TMP/pqc-ca/crl/ca.crl 2>&1; then
     echo ""
     echo -e "  ${RED}✗${NC} Certificate REVOKED - Verification failed (expected!)"
 else
