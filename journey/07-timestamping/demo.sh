@@ -47,10 +47,10 @@ echo "  1b. Issue a TSA certificate"
 echo "  2.  Start an RFC 3161 timestamp server"
 echo "  3.  Create a document"
 echo "  3b. Request a timestamp (via HTTP)"
-echo "  4.  Verify the timestamp (VALID)"
-echo "  5.  Tamper document"
+echo "  3c. Verify the timestamp (VALID)"
+echo "  4.  Tamper document"
 echo "  4b. Verify again (INVALID)"
-echo "  2b. Stop TSA server"
+echo "  5.  Stop TSA server"
 echo ""
 
 echo -e "${DIM}RFC 3161 timestamps are the industry standard for proof of existence.${NC}"
@@ -200,7 +200,7 @@ pause
 # Step 6: Verify Timestamp (VALID)
 # =============================================================================
 
-print_step "Step 4: Verify Timestamp (VALID)"
+print_step "Step 3c: Verify Timestamp (VALID)"
 
 echo "  Verifying that the document hasn't been modified"
 echo "  and the timestamp is valid..."
@@ -220,7 +220,7 @@ pause
 # Step 7: Tamper and Verify Again (INVALID)
 # =============================================================================
 
-print_step "Step 5: Tamper Document"
+print_step "Step 4: Tamper Document"
 
 echo "  Simulating document tampering (fraud attempt)..."
 echo ""
@@ -275,7 +275,7 @@ pause
 # Step 8: Stop TSA Server
 # =============================================================================
 
-print_step "Step 2b: Stop TSA Server"
+print_step "Step 5: Stop TSA Server"
 
 echo "  Stopping the TSA server..."
 echo ""

@@ -119,10 +119,10 @@ A trusted authority (TSA) proves when the signature was created:
 2. Start an RFC 3161 timestamp server
 3. Create a document
 3b. Request a timestamp (via HTTP)
-4. Verify the timestamp (VALID)
-5. Tamper document
+3c. Verify the timestamp (VALID)
+4. Tamper document
 4b. Verify again (INVALID)
-2b. Stop TSA server
+5. Stop TSA server
 
 ---
 
@@ -195,7 +195,7 @@ curl -s -X POST \
 qpki tsa info output/document.tsr
 ```
 
-### Step 4: Verify Timestamp (VALID)
+### Step 3c: Verify Timestamp (VALID)
 
 ```bash
 # Verify token against original document
@@ -205,7 +205,7 @@ qpki tsa verify output/document.tsr \
 # Status: VALID
 ```
 
-### Step 5: Tamper Document
+### Step 4: Tamper Document
 
 ```bash
 # Modify the document (simulate fraud)
@@ -222,7 +222,7 @@ qpki tsa verify output/document.tsr \
 # Result: INVALID - hash mismatch
 ```
 
-### Step 2b: Stop TSA Server
+### Step 5: Stop TSA Server
 
 ```bash
 # Stop the TSA server
