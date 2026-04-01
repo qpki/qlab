@@ -122,12 +122,12 @@ step "Size Comparison" \
      "Same workflow, different sizes."
 
 # Get sizes (CA files are in versions/v1/ with algorithm-specific names)
-CLASSIC_CA_CERT_SIZE=$(cert_size "$CLASSIC_CA/versions/v1/certs/ca.ecdsa-p384.pem")
+CLASSIC_CA_CERT_SIZE=$(cert_size "$CLASSIC_CA/versions/v1/certs/ca.ecdsa-p384.crt")
 CLASSIC_CA_KEY_SIZE=$(key_size "$CLASSIC_CA/versions/v1/keys/ca.ecdsa-p384.key")
 CLASSIC_CERT_SIZE=$(cert_size "$DEMO_TMP/classic-server.crt")
 CLASSIC_KEY_SIZE=$(key_size "$DEMO_TMP/classic-server.key")
 
-PQC_CA_CERT_SIZE=$(cert_size "$PQC_CA/versions/v1/certs/ca.ml-dsa-65.pem")
+PQC_CA_CERT_SIZE=$(cert_size "$PQC_CA/versions/v1/certs/ca.ml-dsa-65.crt")
 PQC_CA_KEY_SIZE=$(key_size "$PQC_CA/versions/v1/keys/ca.ml-dsa-65.key")
 PQC_CERT_SIZE=$(cert_size "$DEMO_TMP/pq-server.crt")
 PQC_KEY_SIZE=$(key_size "$DEMO_TMP/pq-server.key")
