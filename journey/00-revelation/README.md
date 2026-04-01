@@ -201,7 +201,7 @@ You need 55 years of protection, but quantum arrives in 10.
 ## Run the Demo
 
 ```bash
-./demo.sh
+./journey/00-revelation/demo.sh
 ```
 
 The demo is an **interactive Mosca calculator** that helps you assess your PQC migration urgency based on your data's sensitivity lifetime.
