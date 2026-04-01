@@ -47,15 +47,35 @@ echo -e "${GREEN}Detected:${NC} $OS / $ARCH"
 # =============================================================================
 
 if [[ -x "$LAB_ROOT/bin/qpki" ]]; then
-    echo ""
-    echo -e "${GREEN}QPKI tool already installed at: $LAB_ROOT/bin/qpki${NC}"
-    echo ""
-    "$LAB_ROOT/bin/qpki" --version 2>/dev/null || echo -e "${YELLOW}(version check not available)${NC}"
-    echo ""
-    echo -e "To rebuild from source, remove the binary first:"
-    echo -e "  ${CYAN}rm $LAB_ROOT/bin/qpki && ./tooling/install.sh${NC}"
-    echo ""
-    exit 0
+    INSTALLED_VERSION=$("$LAB_ROOT/bin/qpki" --version 2>/dev/null | awk '{print $3}')
+
+    # Check latest version from GitHub
+    LATEST_TAG=$(curl -s "https://api.github.com/repos/qpki/qpki/releases/latest" | grep '"tag_name"' | sed -E 's/.*"tag_name": *"v?([^"]+)".*/\1/')
+
+    if [[ -n "$LATEST_TAG" && "$INSTALLED_VERSION" != "$LATEST_TAG" ]]; then
+        echo ""
+        echo -e "${YELLOW}QPKI update available: ${INSTALLED_VERSION} → ${LATEST_TAG}${NC}"
+        echo ""
+        read -p "$(echo -e "  Update now? [Y/n]: ")" response
+        case "$response" in
+            [nN][oO]|[nN])
+                echo -e "  ${DIM}Skipped. Run ./tooling/install.sh again to update later.${NC}"
+                echo ""
+                exit 0
+                ;;
+            *)
+                echo ""
+                echo -e "  ${CYAN}Updating...${NC}"
+                rm "$LAB_ROOT/bin/qpki"
+                # Fall through to download
+                ;;
+        esac
+    else
+        echo ""
+        echo -e "${GREEN}QPKI ${INSTALLED_VERSION} is up to date.${NC}"
+        echo ""
+        exit 0
+    fi
 fi
 
 # =============================================================================

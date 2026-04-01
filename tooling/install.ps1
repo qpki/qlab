@@ -26,15 +26,36 @@ Write-Host "Detected: windows / $Arch" -ForegroundColor Green
 $BinaryPath = Join-Path $LabRoot "bin\qpki.exe"
 
 if (Test-Path $BinaryPath) {
-    Write-Host ""
-    Write-Host "QPKI tool already installed at: $BinaryPath" -ForegroundColor Green
-    Write-Host ""
-    & $BinaryPath --version 2>$null
-    Write-Host ""
-    Write-Host "To reinstall, remove the binary first:"
-    Write-Host "  Remove-Item $BinaryPath; .\tooling\install.ps1" -ForegroundColor Cyan
-    Write-Host ""
-    exit 0
+    $InstalledVersion = (& $BinaryPath --version 2>$null) -replace '.*version\s+(\S+).*','$1'
+
+    # Check latest version from GitHub
+    try {
+        $ReleaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/qpki/qpki/releases/latest" -UseBasicParsing
+        $LatestTag = $ReleaseInfo.tag_name -replace "^v", ""
+    } catch {
+        $LatestTag = ""
+    }
+
+    if ($LatestTag -and ($InstalledVersion -ne $LatestTag)) {
+        Write-Host ""
+        Write-Host "QPKI update available: $InstalledVersion -> $LatestTag" -ForegroundColor Yellow
+        Write-Host ""
+        $response = Read-Host "  Update now? [Y/n]"
+        if ($response -match '^[nN]') {
+            Write-Host "  Skipped. Run .\tooling\install.ps1 again to update later."
+            Write-Host ""
+            exit 0
+        }
+        Write-Host ""
+        Write-Host "  Updating..." -ForegroundColor Cyan
+        Remove-Item $BinaryPath
+        # Fall through to download
+    } else {
+        Write-Host ""
+        Write-Host "QPKI $InstalledVersion is up to date." -ForegroundColor Green
+        Write-Host ""
+        exit 0
+    }
 }
 
 # =============================================================================
