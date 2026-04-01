@@ -176,7 +176,7 @@ echo "  Inspect the response..."
 echo ""
 
 if [[ -f "$DEMO_TMP/response.ocsp" ]] && [[ -s "$DEMO_TMP/response.ocsp" ]]; then
-    run_cmd "$PKI_BIN inspect $DEMO_TMP/response.ocsp"
+    run_cmd "$PKI_BIN ocsp info $DEMO_TMP/response.ocsp"
 
     echo ""
 
@@ -223,7 +223,7 @@ echo "  Inspect the response..."
 echo ""
 
 if [[ -f "$DEMO_TMP/response2.ocsp" ]] && [[ -s "$DEMO_TMP/response2.ocsp" ]]; then
-    run_cmd "$PKI_BIN inspect $DEMO_TMP/response2.ocsp"
+    run_cmd "$PKI_BIN ocsp info $DEMO_TMP/response2.ocsp"
 
     echo ""
 
