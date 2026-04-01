@@ -272,12 +272,16 @@ qpki ca export --ca-dir output/ca --all --out output/trust-transition.pem
 # Legacy cert validates with legacy trust store (legacy clients scenario)
 qpki cert verify output/server-v1.pem --ca output/trust-legacy.pem
 
+# Hybrid cert validates with transition trust store (transition clients scenario)
+qpki cert verify output/server-v2.pem --ca output/trust-transition.pem
+
 # PQC cert validates with modern trust store (modern clients scenario)
 qpki cert verify output/server-v3.pem --ca output/trust-modern.pem
 
-# Transition trust store accepts BOTH old and new certificates
+# Transition trust store accepts ALL certificate versions
 # This is the key to gradual migration - all certs work during transition
 qpki cert verify output/server-v1.pem --ca output/trust-transition.pem
+qpki cert verify output/server-v2.pem --ca output/trust-transition.pem
 qpki cert verify output/server-v3.pem --ca output/trust-transition.pem
 ```
 
@@ -287,8 +291,10 @@ INTEROPERABILITY MATRIX
   Certificate    │  Trust Store        │  Result
 ─────────────────┼─────────────────────┼─────────
   v1 (ECDSA)     │  trust-legacy.pem   │  ✓ OK
+  v2 (Hybrid)    │  trust-transition   │  ✓ OK
   v3 (ML-DSA)    │  trust-modern.pem   │  ✓ OK
   v1 (ECDSA)     │  trust-transition   │  ✓ OK
+  v2 (Hybrid)    │  trust-transition   │  ✓ OK
   v3 (ML-DSA)    │  trust-transition   │  ✓ OK
 ───────────────────────────────────────────
 
