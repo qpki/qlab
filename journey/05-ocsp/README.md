@@ -47,8 +47,10 @@ Yes. Same HTTP protocol, same request/response format. Only signature sizes chan
 2. Start OCSP responder
 2b. Issue TLS certificate
 3. Query certificate status (GOOD)
-3b. Revoke the certificate
-4. Query again (REVOKED)
+3b. Verify OCSP response (VALID)
+4. Revoke the certificate
+4b. Query again (REVOKED)
+4c. Verify OCSP response (REVOKED)
 5. Stop OCSP responder
 
 ---
@@ -132,6 +134,15 @@ curl -s -X POST \
 qpki ocsp info output/response.ocsp
 ```
 
+### Step 3b: Verify OCSP Response (VALID)
+
+```bash
+# Cryptographically verify the OCSP response signature
+qpki ocsp verify output/response.ocsp \
+    --ca output/pqc-ca/ca.crt \
+    --cert output/server.crt
+```
+
 ### Step 4: Revoke Certificate
 
 ```bash
@@ -139,7 +150,7 @@ qpki ocsp info output/response.ocsp
 qpki cert revoke <serial> --ca-dir output/pqc-ca --reason keyCompromise
 ```
 
-### Step 4: Query Again (REVOKED)
+### Step 4b: Query Again (REVOKED)
 
 ```bash
 # Query again - status changes immediately! (CRL would take hours)
@@ -151,6 +162,16 @@ curl -s -X POST \
 
 qpki ocsp info output/response2.ocsp
 # Status: revoked
+```
+
+### Step 4c: Verify OCSP Response (REVOKED)
+
+```bash
+# Verify — should fail because certificate is revoked
+qpki ocsp verify output/response2.ocsp \
+    --ca output/pqc-ca/ca.crt \
+    --cert output/server.crt
+# Error: certificate status is revoked
 ```
 
 ### Step 5: Stop OCSP Responder

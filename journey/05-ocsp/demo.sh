@@ -44,8 +44,10 @@ echo "  1b. Issue OCSP responder certificate"
 echo "  2.  Start OCSP responder"
 echo "  2b. Issue TLS certificate"
 echo "  3.  Query certificate status (GOOD)"
-echo "  3b. Revoke the certificate"
-echo "  4.  Query again (REVOKED)"
+echo "  3b. Verify OCSP response (VALID)"
+echo "  4.  Revoke the certificate"
+echo "  4b. Query again (REVOKED)"
+echo "  4c. Verify OCSP response (REVOKED)"
 echo "  5.  Stop OCSP responder"
 echo ""
 
@@ -177,18 +179,28 @@ echo ""
 
 if [[ -f "$DEMO_TMP/response.ocsp" ]] && [[ -s "$DEMO_TMP/response.ocsp" ]]; then
     run_cmd "$PKI_BIN ocsp info $DEMO_TMP/response.ocsp"
-
-    echo ""
-
-    # Cryptographically verify the OCSP response signature
-    run_cmd "$PKI_BIN ocsp verify $DEMO_TMP/response.ocsp --ca $DEMO_TMP/pqc-ca/ca.crt --cert $DEMO_TMP/server.crt"
 fi
 echo ""
 
 pause
 
 # =============================================================================
-# Step 6: Revoke Certificate
+# Step 3b: Verify OCSP Response (VALID)
+# =============================================================================
+
+print_step "Step 3b: Verify OCSP Response (VALID)"
+
+echo "  Cryptographically verify the OCSP response signature..."
+echo ""
+
+run_cmd "$PKI_BIN ocsp verify $DEMO_TMP/response.ocsp --ca $DEMO_TMP/pqc-ca/ca.crt --cert $DEMO_TMP/server.crt"
+
+echo ""
+
+pause
+
+# =============================================================================
+# Step 4: Revoke Certificate
 # =============================================================================
 
 print_step "Step 4: Revoke Certificate"
@@ -208,7 +220,7 @@ pause
 # Step 7: Query Again (REVOKED)
 # =============================================================================
 
-print_step "Step 4: Query Again (REVOKED)"
+print_step "Step 4b: Query Again (REVOKED)"
 
 echo "  Query again - status should change immediately!"
 echo ""
@@ -224,14 +236,23 @@ echo ""
 
 if [[ -f "$DEMO_TMP/response2.ocsp" ]] && [[ -s "$DEMO_TMP/response2.ocsp" ]]; then
     run_cmd "$PKI_BIN ocsp info $DEMO_TMP/response2.ocsp"
+fi
+echo ""
 
+pause
+
+# =============================================================================
+# Step 4c: Verify OCSP Response (REVOKED)
+# =============================================================================
+
+print_step "Step 4c: Verify OCSP Response (REVOKED)"
+
+echo "  Verify the response — should fail because certificate is revoked..."
+echo ""
+
+if ! $PKI_BIN ocsp verify $DEMO_TMP/response2.ocsp --ca $DEMO_TMP/pqc-ca/ca.crt --cert $DEMO_TMP/server.crt 2>&1; then
     echo ""
-
-    # Verify the OCSP response — should show revoked status
-    if ! $PKI_BIN ocsp verify $DEMO_TMP/response2.ocsp --ca $DEMO_TMP/pqc-ca/ca.crt --cert $DEMO_TMP/server.crt 2>&1; then
-        echo ""
-        echo -e "  ${RED}✗${NC} Certificate status: ${RED}REVOKED${NC} (expected!)"
-    fi
+    echo -e "  ${RED}✗${NC} Certificate status: ${RED}REVOKED${NC} (expected!)"
 fi
 echo ""
 echo "  ┌─────────────────────────────────────────────────────────────────┐"
