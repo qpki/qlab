@@ -329,7 +329,15 @@ else
     echo -e "${RED}✗ FAIL${NC}                        │"
 fi
 
-# Test 2: PQC cert with modern trust
+# Test 2: Hybrid cert with transition trust
+echo -n "  │  v2 cert + trust-transition   │  "
+if $PKI_BIN cert verify $DEMO_TMP/server-v2.pem --ca $DEMO_TMP/trust-transition.pem > /dev/null 2>&1; then
+    echo -e "${GREEN}✓ OK${NC}                          │"
+else
+    echo -e "${RED}✗ FAIL${NC}                        │"
+fi
+
+# Test 3: PQC cert with modern trust
 echo -n "  │  v3 cert + trust-modern.pem   │  "
 if $PKI_BIN cert verify $DEMO_TMP/server-v3.pem --ca $DEMO_TMP/trust-modern.pem > /dev/null 2>&1; then
     echo -e "${GREEN}✓ OK${NC}                          │"
@@ -337,7 +345,7 @@ else
     echo -e "${RED}✗ FAIL${NC}                        │"
 fi
 
-# Test 3: Legacy cert with transition trust
+# Test 4: Legacy cert with transition trust
 echo -n "  │  v1 cert + trust-transition   │  "
 if $PKI_BIN cert verify $DEMO_TMP/server-v1.pem --ca $DEMO_TMP/trust-transition.pem > /dev/null 2>&1; then
     echo -e "${GREEN}✓ OK${NC}                          │"
@@ -345,7 +353,7 @@ else
     echo -e "${RED}✗ FAIL${NC}                        │"
 fi
 
-# Test 4: PQC cert with transition trust
+# Test 5: PQC cert with transition trust
 echo -n "  │  v3 cert + trust-transition   │  "
 if $PKI_BIN cert verify $DEMO_TMP/server-v3.pem --ca $DEMO_TMP/trust-transition.pem > /dev/null 2>&1; then
     echo -e "${GREEN}✓ OK${NC}                          │"
