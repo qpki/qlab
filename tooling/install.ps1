@@ -181,15 +181,10 @@ function Show-ManualInstructions {
     Write-Host "  Download failed - Manual installation required"
     Write-Host "==============================================" -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "To use QLAB, you need to build QPKI from source:"
+    Write-Host "  Download manually from:"
+    Write-Host "     https://github.com/qpki/qpki/releases/latest" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "  1. Clone the QPKI repository:"
-    Write-Host "     git clone https://github.com/$GithubRepo.git" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "  2. Build and install:"
-    Write-Host "     cd qpki; go install ./cmd/qpki" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "  3. Run this script again to verify:"
+    Write-Host "  Then run this script again to verify:"
     Write-Host "     .\tooling\install.ps1" -ForegroundColor Cyan
     Write-Host ""
 }
